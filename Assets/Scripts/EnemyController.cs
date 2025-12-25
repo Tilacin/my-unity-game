@@ -24,10 +24,13 @@ public class EnemyController : MonoBehaviour
     private float _LastReceiveTime = 0f;
     private Player _player;
 
-    public void Init(Player player)
+    public void Init(string key, Player player)
     {
+        _cherecter.Init(key);
+
       _player = player;
         _cherecter.SetSpeed(player.speed);
+        _cherecter.SetMaxHP(player.maxHP);
         player.OnChange += OnChange;
     }
 
@@ -61,7 +64,15 @@ public class EnemyController : MonoBehaviour
         {
           switch (dataChange.Field)
             {
-                case "pX": position.x = (float)dataChange.Value;
+                case "loss":
+                    MultiplayerManager.Instance._lossCounter.SetEnemyLoss((byte)dataChange.Value);
+                    break;
+                case "currentHP":
+                    if ((sbyte)dataChange.Value > (sbyte)dataChange.PreviousValue)
+                        _cherecter.RestoreHP((sbyte)dataChange.Value);
+                    break;
+                case "pX":
+                    position.x = (float)dataChange.Value;
                     break;
                 case "pY":
                     position.y = (float)dataChange.Value;

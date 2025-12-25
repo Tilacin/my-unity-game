@@ -6,8 +6,10 @@ public class Bullet : MonoBehaviour
 {
     [SerializeField] private float _lifeTime = 5f;
     [SerializeField] private Rigidbody _rigidbody;
-    public void Init(Vector3 velocity)
+    private int _damage;
+    public void Init(Vector3 velocity, int damage = 0)
     {
+        _damage = damage;
         _rigidbody.velocity = velocity ;
         StartCoroutine(DelayDestroy());
     }
@@ -23,6 +25,11 @@ public class Bullet : MonoBehaviour
     }
     private void OnCollisionEnter(Collision collision)
     {
+        if(collision.collider.TryGetComponent(out EnemyCharacter enemy))
+        {
+            enemy.ApplyDamage(_damage);
+        }
+
         Destroy();
     }
 }
