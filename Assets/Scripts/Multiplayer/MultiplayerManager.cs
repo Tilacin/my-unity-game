@@ -28,7 +28,8 @@ public class MultiplayerManager : ColyseusManager<MultiplayerManager>
       _room = await Instance.client.JoinOrCreate<State>("state_handler", data);
         _room.OnStateChange += OnChange;
         _room.OnMessage<string>("Shoot", ApplyShoot);
-        
+        _room.OnMessage<WeaponChangeMessage>("weaponChanged", OnWeaponChanged);
+
     }
 
     private void ApplyShoot(string jsonShootInfo)
@@ -75,7 +76,14 @@ public class MultiplayerManager : ColyseusManager<MultiplayerManager>
         _enemies.Add(key, enemy);
        
     }
-
+    private void OnWeaponChanged(WeaponChangeMessage message)
+    {
+        // Находим врага по playerId и меняем ему оружие
+        if (_enemies.ContainsKey(message.playerId))
+        {
+            _enemies[message.playerId].SetWeapon(message.weaponIndex);
+        }
+    }
     private void RemoveEnemy(string key, Player player)
     {
         if (_enemies.ContainsKey(key) == false) return;
@@ -103,5 +111,14 @@ public class MultiplayerManager : ColyseusManager<MultiplayerManager>
     }
 
     public string GetSessionID() => _room.SessionId;
+}
+
+
+
+[System.Serializable]
+public class WeaponChangeMessage
+{
+    public string playerId;
+    public int weaponIndex;
 }
 

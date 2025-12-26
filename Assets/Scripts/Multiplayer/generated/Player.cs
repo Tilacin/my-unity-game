@@ -43,5 +43,8 @@ public partial class Player : Schema {
 
 	[Type(11, "number")]
 	public float rY = default(float);
+
+	[Type(12, "uint8")]
+	public byte weaponIndex = default(byte);
 }
 

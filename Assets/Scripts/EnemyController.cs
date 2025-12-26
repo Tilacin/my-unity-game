@@ -7,7 +7,10 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private EnemyCharacter _cherecter;
     [SerializeField] private EnemyGun _gun;
     private List<float> _receiveTimeInterval = new List<float> { 0,0,0,0,0};
-
+    private string _sessionId;
+    [SerializeField] private GameObject[] enemyWeapons; // 3 оружия врага
+    private int currentWeaponIndex = 0;
+   
     private float AverageInterval
     {
         get
@@ -26,12 +29,15 @@ public class EnemyController : MonoBehaviour
 
     public void Init(string key, Player player)
     {
+        _sessionId = key;
         _cherecter.Init(key);
 
       _player = player;
         _cherecter.SetSpeed(player.speed);
         _cherecter.SetMaxHP(player.maxHP);
         player.OnChange += OnChange;
+
+        SetWeapon(player.weaponIndex);
     }
 
     public void Shoot(in ShootInfo info)
@@ -101,5 +107,21 @@ public class EnemyController : MonoBehaviour
             }
         }
         _cherecter.SetMovement(position, velocity, AverageInterval);
+    }
+    public void SetWeapon(int weaponIndex)
+    {
+        // Проверяем валидность индекса
+        if (weaponIndex < 0 || weaponIndex >= enemyWeapons.Length) return;
+        if (weaponIndex == currentWeaponIndex) return;
+
+        // Деактивируем текущее
+        if (currentWeaponIndex >= 0 && currentWeaponIndex < enemyWeapons.Length)
+            enemyWeapons[currentWeaponIndex].SetActive(false);
+
+        // Активируем новое
+        currentWeaponIndex = weaponIndex;
+        enemyWeapons[currentWeaponIndex].SetActive(true);
+
+        Debug.Log($"Враг {_sessionId} сменил оружие на {weaponIndex}");
     }
 }

@@ -9,7 +9,14 @@ public class PlayerGun : Gun
     [SerializeField] private float _bulletSpeed;
     [SerializeField] private float _shootDelay;
     private float _lastShootTime;
-   
+
+
+
+    public void UpdateBulletPoint(Transform newBulletPoint)
+    {
+        _bulletPoint = newBulletPoint;
+        Debug.Log($"Точка стрельбы обновлена: {newBulletPoint.name}");
+    }
     public bool TryShoot(out ShootInfo info)
     {
         info = new ShootInfo();
