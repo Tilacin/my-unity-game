@@ -1,16 +1,14 @@
-
+using KinematicCharacterController.Examples;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-
-
 public class Controller : MonoBehaviour
 {
     [SerializeField] private float _restartDelay = 3f;
     [SerializeField] private PlayerCharacter _player;
-    [SerializeField] private PlayerGun _gun;
+    //[SerializeField] private PlayerGun _gun;
     [SerializeField] private float _mouseSensetivity = 2f;
     private MultiplayerManager _multiplayerManager;
     private bool _hold = false;
@@ -37,20 +35,20 @@ public class Controller : MonoBehaviour
         bool isShoot = false;
         if (_hideCursor)
         {
-             mouseX = Input.GetAxis("Mouse X");
-             mouseY = Input.GetAxis("Mouse Y");
-             isShoot = Input.GetMouseButton(0);
+            mouseX = Input.GetAxis("Mouse X");
+            mouseY = Input.GetAxis("Mouse Y");
+            isShoot = Input.GetMouseButton(0);
         }
-        
-       bool space = Input.GetKeyDown(KeyCode.Space);
 
-        
+        bool space = Input.GetKeyDown(KeyCode.Space);
+
+
 
         _player.SetInput(h, v, mouseX * _mouseSensetivity);
         _player.RotateX(-mouseY * _mouseSensetivity);
         if (space) _player.Jump();
 
-        if(isShoot && _gun.TryShoot(out ShootInfo shootInfo)) SendShoot(ref shootInfo);
+       // if (isShoot && _gun.TryShoot(out ShootInfo shootInfo)) SendShoot(ref shootInfo);
 
         SendMove();
     }
@@ -76,7 +74,7 @@ public class Controller : MonoBehaviour
             {"rX", rotateX},
             {"rY", rotateY}
         };
-       _multiplayerManager.SendMessage("move", data);
+        _multiplayerManager.SendMessage("move", data);
     }
 
     public void Restart(int spawnIndex)
@@ -88,7 +86,7 @@ public class Controller : MonoBehaviour
         rotation.z = 0;
         _player.transform.eulerAngles = rotation;
         _player.SetInput(0, 0, 0);
-       
+
         Dictionary<string, object> data = new Dictionary<string, object>()
         {
             {"pX", position.x},
@@ -111,6 +109,7 @@ public class Controller : MonoBehaviour
     }
 }
 
+// —труктуры пока оставим, вдруг пригод€тс€ дл€ ударов
 [System.Serializable]
 public struct ShootInfo
 {
@@ -123,12 +122,10 @@ public struct ShootInfo
     public float dZ;
 }
 
-    [Serializable]
-    public struct RestartInfo
-    {
-
-        public float x;
-        public float z;
-
-    }
+[Serializable]
+public struct RestartInfo
+{
+    public float x;
+    public float z;
+}
 

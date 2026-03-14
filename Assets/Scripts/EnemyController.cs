@@ -4,9 +4,8 @@ using UnityEngine;
 
 public class EnemyController : MonoBehaviour
 {
-    [SerializeField] private EnemyCharacter _cherecter;
-    [SerializeField] private EnemyGun _gun;
-    private List<float> _receiveTimeInterval = new List<float> { 0,0,0,0,0};
+    [SerializeField] private EnemyCharacter _character;
+    private List<float> _receiveTimeInterval = new List<float> { 0, 0, 0, 0, 0 };
 
     private float AverageInterval
     {
@@ -18,7 +17,7 @@ public class EnemyController : MonoBehaviour
             {
                 sum += _receiveTimeInterval[i];
             }
-            return sum/receiveTimeIntervalCount;
+            return sum / receiveTimeIntervalCount;
         }
     }
     private float _LastReceiveTime = 0f;
@@ -26,50 +25,39 @@ public class EnemyController : MonoBehaviour
 
     public void Init(string key, Player player)
     {
-        _cherecter.Init(key);
-
-      _player = player;
-        _cherecter.SetSpeed(player.speed);
-        _cherecter.SetMaxHP(player.maxHP);
+        _character.Init(key);
+        _player = player;
+        _character.SetSpeed(player.speed);
         player.OnChange += OnChange;
     }
 
-    public void Shoot(in ShootInfo info)
-    {
-       Vector3 position = new Vector3(info.pX, info.pY, info.pZ);
-       Vector3 velocity =new Vector3(info.dX, info.dY, info.dZ);
-        _gun.Shoot(position, velocity);
-    }
     public void Destroy()
     {
         _player.OnChange -= OnChange;
-       Destroy(gameObject); 
+        Destroy(gameObject);
     }
+
     private void SaveReceiveTime()
     {
         float interval = Time.time - _LastReceiveTime;
         _LastReceiveTime = Time.time;
-
         _receiveTimeInterval.Add(interval);
         _receiveTimeInterval.RemoveAt(0);
     }
+
     internal void OnChange(List<DataChange> changes)
     {
         SaveReceiveTime();
 
         Vector3 position = transform.position;
-        Vector3 velocity = _cherecter.velocity;
+        Vector3 velocity = _character.velocity;
 
         foreach (var dataChange in changes)
         {
-          switch (dataChange.Field)
+            switch (dataChange.Field)
             {
                 case "loss":
                     MultiplayerManager.Instance._lossCounter.SetEnemyLoss((byte)dataChange.Value);
-                    break;
-                case "currentHP":
-                    if ((sbyte)dataChange.Value > (sbyte)dataChange.PreviousValue)
-                        _cherecter.RestoreHP((sbyte)dataChange.Value);
                     break;
                 case "pX":
                     position.x = (float)dataChange.Value;
@@ -80,7 +68,6 @@ public class EnemyController : MonoBehaviour
                 case "pZ":
                     position.z = (float)dataChange.Value;
                     break;
-              
                 case "vX":
                     velocity.x = (float)dataChange.Value;
                     break;
@@ -91,15 +78,16 @@ public class EnemyController : MonoBehaviour
                     velocity.z = (float)dataChange.Value;
                     break;
                 case "rX":
-                    _cherecter.SetRotateX((float)dataChange.Value);
+                    _character.SetRotateX((float)dataChange.Value);
                     break;
                 case "rY":
-                    _cherecter.SetRotateY((float)dataChange.Value);
+                    _character.SetRotateY((float)dataChange.Value);
                     break;
-                default: Debug.LogWarning("Не обрабатывается изменение поля" + dataChange.Field);
+                default:
+                    Debug.LogWarning("Не обрабатывается изменение поля " + dataChange.Field);
                     break;
             }
         }
-        _cherecter.SetMovement(position, velocity, AverageInterval);
+        _character.SetMovement(position, velocity, AverageInterval);
     }
 }

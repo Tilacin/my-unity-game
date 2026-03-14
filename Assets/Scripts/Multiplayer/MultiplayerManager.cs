@@ -12,20 +12,20 @@ public class MultiplayerManager : ColyseusManager<MultiplayerManager>
 
     private ColyseusRoom<State> _room;
     private Dictionary<string, EnemyController> _enemies = new Dictionary<string, EnemyController>();
+
     protected override void Awake()
     {
         base.Awake();
         Instance.InitializeClient();
         Connect();
     }
-    
+
     private async void Connect()
     {
-
         _spawnPoints.GetPoint(Random.Range(0, _spawnPoints.length), out Vector3 spawnRotation, out Vector3 spawnPosition);
         Dictionary<string, object> data = new Dictionary<string, object>()
         {
-            {"skins", _skins.lendth },
+            {"skins", _skins.Length },
             { "points", _spawnPoints.length },
             { "speed", _player.speed },
             {"hp", _player.maxHealth },
@@ -33,24 +33,10 @@ public class MultiplayerManager : ColyseusManager<MultiplayerManager>
             {"pY", spawnPosition.y },
             {"pZ", spawnPosition.z },
             {"rY", spawnRotation.y }
-        }; 
+        };
 
-      _room = await Instance.client.JoinOrCreate<State>("state_handler", data);
+        _room = await Instance.client.JoinOrCreate<State>("state_handler", data);
         _room.OnStateChange += OnChange;
-        _room.OnMessage<string>("Shoot", ApplyShoot);
-        
-    }
-
-    private void ApplyShoot(string jsonShootInfo)
-    {
-        ShootInfo shootInfo = JsonUtility.FromJson<ShootInfo>(jsonShootInfo);
-
-       if(_enemies.ContainsKey(shootInfo.key) == false)
-        {
-            Debug.LogError("≈неми нет, а он пыталс€ стрел€ть");
-            return;
-        }
-        _enemies[shootInfo.key].Shoot(shootInfo);
     }
 
     private void OnChange(State state, bool isFirstState)
@@ -74,20 +60,16 @@ public class MultiplayerManager : ColyseusManager<MultiplayerManager>
         player.OnChange += playerCharacter.OnChange;
 
         _room.OnMessage<int>("Restart", playerCharacter.GetComponent<Controller>().Restart);
-
         playerCharacter.GetComponent<SetSkin>().Set(_skins.GetMaterial(player.skin));
     }
 
-    
     private void CreateEnemy(string key, Player player)
     {
         var position = new Vector3(player.pX, player.pY, player.pZ);
         var enemy = Instantiate(_enemy, position, Quaternion.identity);
-        enemy.Init(key,player);
+        enemy.Init(key, player);
         enemy.GetComponent<SetSkin>().Set(_skins.GetMaterial(player.skin));
-
         _enemies.Add(key, enemy);
-       
     }
 
     private void RemoveEnemy(string key, Player player)
@@ -96,10 +78,9 @@ public class MultiplayerManager : ColyseusManager<MultiplayerManager>
 
         var enemy = _enemies[key];
         enemy.Destroy();
-
         _enemies.Remove(key);
     }
-   
+
     protected override void OnDestroy()
     {
         base.OnDestroy();
