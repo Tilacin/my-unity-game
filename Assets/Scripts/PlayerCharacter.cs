@@ -1,4 +1,5 @@
 using Colyseus.Schema;
+using KinematicCharacterController.Examples;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,28 +13,54 @@ public class PlayerCharacter : Character
     [SerializeField] private float _jumpForce = 5;
     [SerializeField] private CheckFly _checkFly;
     [SerializeField] private float _jumpDelay = .2f;
+    [Header("Camera")]
+    [SerializeField] private ExampleCharacterCamera _gameCamera;
+    [SerializeField] private float _mouseSensitivity = 1f;
 
     private float _inputH;
     private float _inputV;
     private float _rotateY;
     private float _currentRotateX;
     private float _jumpTime;
+    private float _mouseX;
+    private float _mouseY;
+    private bool _isCameraLocked;
 
-    private void Start()
+    public void SetCamera(ExampleCharacterCamera cam)
     {
-       Transform camera = Camera.main.transform;
-       camera.parent = _cameraPoint;
-        camera.localPosition = Vector3.zero;
-        camera.localRotation = Quaternion.identity;
+        _gameCamera = cam;
+        if (_gameCamera != null)
+        {
+            _gameCamera.SetFollowTransform(_cameraPoint != null ? _cameraPoint : transform);
+        }
     }
-
     public void SetInput(float h, float v, float rotateY)
     {
         _inputH = h;
         _inputV = v;
         _rotateY += rotateY;
     }
+    private void Update()
+    {
+        if (!_isCameraLocked)
+        {
+            _mouseX = Input.GetAxis("Mouse X") * _mouseSensitivity;
+            _mouseY = Input.GetAxis("Mouse Y") * _mouseSensitivity;
 
+            if (_gameCamera != null)
+            {
+                // Всегда передаем инпут в камеру, даже если кнопка не зажата
+                // Но rotateY добавляем только при зажатой кнопке
+                _gameCamera.UpdateWithInput(Time.deltaTime, 0, new Vector3(_mouseX, _mouseY, 0));
+            }
+
+            if (Input.GetMouseButton(1))
+            {
+                _rotateY += _mouseX;
+            }
+        }
+        
+    }
     private void FixedUpdate()
     {
         Move();
@@ -42,12 +69,29 @@ public class PlayerCharacter : Character
 
     private void Move()
     {
-        Vector3 velocity = (transform.forward * _inputV + transform.right * _inputH).normalized * speed;
+        Vector3 cameraForward = _gameCamera.transform.forward;
+        Vector3 cameraRight = _gameCamera.transform.right;
+
+        cameraForward.y = 0;
+        cameraRight.y = 0;
+        cameraForward.Normalize();
+        cameraRight.Normalize();
+
+        Vector3 moveDirection = (cameraForward * _inputV + cameraRight * _inputH).normalized;
+
+        // Если есть движение - поворачиваем модель в сторону движения
+        if (moveDirection.magnitude > 0.1f)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+           transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 10f);
+           
+        }
+
+        Vector3 velocity = moveDirection * speed;
         velocity.y = _rigidbody.velocity.y;
         base.velocity = velocity;
         _rigidbody.velocity = base.velocity;
     }
-
     private void RotateY()
     {
         _rigidbody.angularVelocity = new Vector3(0, _rotateY, 0);
@@ -106,5 +150,15 @@ public class PlayerCharacter : Character
                     break;
             }
         }
+    }
+    public void LockCamera(bool locked)
+    {
+        _isCameraLocked = locked;
+        Cursor.lockState = locked ? CursorLockMode.None : CursorLockMode.Locked;
+        Cursor.visible = locked;
+    }
+    public Transform GetCameraFollowPoint()
+    {
+        return _cameraPoint != null ? _cameraPoint : transform;
     }
 }

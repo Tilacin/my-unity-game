@@ -8,7 +8,7 @@ public class Controller : MonoBehaviour
 {
     [SerializeField] private float _restartDelay = 3f;
     [SerializeField] private PlayerCharacter _player;
-    //[SerializeField] private PlayerGun _gun;
+    [SerializeField] private ExampleCharacterCamera _gameCamera;
     [SerializeField] private float _mouseSensetivity = 2f;
     private MultiplayerManager _multiplayerManager;
     private bool _hold = false;
@@ -18,6 +18,10 @@ public class Controller : MonoBehaviour
         _multiplayerManager = MultiplayerManager.Instance;
         _hideCursor = true;
         Cursor.lockState = CursorLockMode.Locked;
+
+        // Находим камеру, если не назначена
+        if (_gameCamera == null)
+            _gameCamera = FindObjectOfType<ExampleCharacterCamera>();
     }
     private void Update()
     {
@@ -25,41 +29,34 @@ public class Controller : MonoBehaviour
         {
             _hideCursor = !_hideCursor;
             Cursor.lockState = _hideCursor ? CursorLockMode.Locked : CursorLockMode.None;
+
+            // Блокируем/разблокируем камеру у игрока
+            if (_player != null)
+                _player.LockCamera(!_hideCursor);
         }
+
         if (_hold) return;
+
+        // Движение (WASD)
         float h = Input.GetAxisRaw("Horizontal");
         float v = Input.GetAxisRaw("Vertical");
 
-        float mouseX = 0;
-        float mouseY = 0;
-        bool isShoot = false;
-        if (_hideCursor)
-        {
-            mouseX = Input.GetAxis("Mouse X");
-            mouseY = Input.GetAxis("Mouse Y");
-            isShoot = Input.GetMouseButton(0);
-        }
-
+        // Прыжок
         bool space = Input.GetKeyDown(KeyCode.Space);
-
-
-
-        _player.SetInput(h, v, mouseX * _mouseSensetivity);
-        _player.RotateX(-mouseY * _mouseSensetivity);
         if (space) _player.Jump();
 
-       // if (isShoot && _gun.TryShoot(out ShootInfo shootInfo)) SendShoot(ref shootInfo);
-
+        // Передаем только движение в PlayerCharacter (поворот камеры теперь в PlayerCharacter.Update)
+        _player.SetInput(h, v, 0);
         SendMove();
     }
-
+    /*
     private void SendShoot(ref ShootInfo shootInfo)
     {
         shootInfo.key = _multiplayerManager.GetSessionID();
         string json = JsonUtility.ToJson(shootInfo);
         _multiplayerManager.SendMessage("shoot", json);
     }
-
+    */
     private void SendMove()
     {
         _player.GetMoveInfo(out Vector3 position, out Vector3 velocity, out float rotateX, out float rotateY);

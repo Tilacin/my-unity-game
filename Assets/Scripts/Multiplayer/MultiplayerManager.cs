@@ -1,4 +1,5 @@
 using Colyseus;
+using KinematicCharacterController.Examples;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,7 +10,7 @@ public class MultiplayerManager : ColyseusManager<MultiplayerManager>
     [field: SerializeField] public SpawnPoints _spawnPoints { get; private set; }
     [SerializeField] private PlayerCharacter _player;
     [SerializeField] private EnemyController _enemy;
-
+    [SerializeField] private ExampleCharacterCamera _gameCamera;
     private ColyseusRoom<State> _room;
     private Dictionary<string, EnemyController> _enemies = new Dictionary<string, EnemyController>();
 
@@ -58,6 +59,16 @@ public class MultiplayerManager : ColyseusManager<MultiplayerManager>
         Quaternion rotation = Quaternion.Euler(0, player.rY, 0);
         var playerCharacter = Instantiate(_player, position, rotation);
         player.OnChange += playerCharacter.OnChange;
+
+        // Ќаходим камеру если не назначена
+        if (_gameCamera == null)
+            _gameCamera = FindObjectOfType<ExampleCharacterCamera>();
+
+        if (_gameCamera != null)
+        {
+            _gameCamera.SetFollowTransform(playerCharacter.GetCameraFollowPoint());
+            playerCharacter.SetCamera(_gameCamera); // добавим метод
+        }
 
         _room.OnMessage<int>("Restart", playerCharacter.GetComponent<Controller>().Restart);
         playerCharacter.GetComponent<SetSkin>().Set(_skins.GetMaterial(player.skin));
